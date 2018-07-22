@@ -1,2 +1,0 @@
-# Dagpay PHP Client
-
