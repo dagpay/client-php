@@ -15,15 +15,13 @@ class DagpayClient
         $user_id,
         $secret,
         $mode,
-        $platform,
-        \Dagcoin\PaymentGateway\lib\CurlFactory $factory
+        $platform
     ) {
         $this->environment_id = $environment_id;
         $this->user_id = $user_id;
         $this->secret = $secret;
         $this->test = $mode;
         $this->platform = $platform;
-        $this->curlFactory = $factory;
     }
 
     private function getRandomString($length)
