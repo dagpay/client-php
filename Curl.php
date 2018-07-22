@@ -1,5 +1,4 @@
 <?php
-namespace Dagcoin\PaymentGateway\lib;
 
 class Curl
 {
