@@ -155,14 +155,9 @@ class DagpayClient
                 $response = wp_safe_remote_get($this->getUrl() . $url, $request);
             }
 
-            if (is_wp_error($response)) {
-                throw new
-                \Magento\Framework\Exception\LocalizedException("Something failed! Please try again later...");
-            }
-
             $data = json_decode(wp_remote_retrieve_body($response));
-            if (! $data->success) {
-                throw new \Magento\Framework\Exception\LocalizedException("Failed");
+            if (!$data->success) {
+                throw new \Exception($data->error || "Something went wrong! Please try again later or contact our support...");
             }
 
             return $data->payload;
