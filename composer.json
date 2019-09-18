@@ -1,5 +1,9 @@
 {
   "name": "dagpay/client-php",
+  "type": "library",
+  "keywords": ["payment","dagcoin"],
+  "homepage": "https://github.com/dagpay/client-php",
+  "license": "MIT",
   "description": "Dagpay PHP Client",
   "require": {
     "php": "^5.6",
