@@ -2,7 +2,8 @@
 
 include_once __DIR__ . DIRECTORY_SEPARATOR . 'curl.php';
 
-class DagpayClient {
+class DagpayClient
+{
     private $curl;
     private $environment_id;
     private $user_id;
@@ -12,8 +13,9 @@ class DagpayClient {
 
     public function __construct($environment_id, $user_id, $secret, $mode, $platform = "standalone")
     {
-        if ($platform === "standalone")
+        if ($platform === "standalone") {
             $this->curl = new Curl();
+        }
 
         $this->environment_id = $environment_id;
         $this->user_id = $user_id;
@@ -22,7 +24,8 @@ class DagpayClient {
         $this->platform = $platform;
     }
 
-    private function get_random_string($length) {
+    private function get_random_string($length)
+    {
         return strtoupper(
             bin2hex(
                 random_bytes(
@@ -32,14 +35,16 @@ class DagpayClient {
         );
     }
 
-    private function get_signature($tokens) {
+    private function get_signature($tokens)
+    {
         return hash_hmac(
             "sha512",
             implode(":", $tokens),
             $this->secret);
     }
 
-    private function get_create_invoice_signature($info) {
+    private function get_create_invoice_signature($info)
+    {
         return $this->get_signature(array(
             $info["currencyAmount"],
             $info["currency"],
@@ -52,7 +57,8 @@ class DagpayClient {
         ));
     }
 
-    public function get_invoice_info_signature( $info ) {
+    public function get_invoice_info_signature($info)
+    {
         return $this->get_signature(array(
             $info->id,
             $info->userId,
@@ -79,17 +85,18 @@ class DagpayClient {
         ));
     }
 
-    public function create_invoice($id, $currency, $total) {
+    public function create_invoice($id, $currency, $total)
+    {
         $datetime = new DateTime();
 
         $invoice = array(
             "userId" => $this->user_id,
             "environmentId" => $this->environment_id,
-            "currencyAmount" => (float) $total,
+            "currencyAmount" => (float)$total,
             "currency" => $currency,
             "description" => "Dagcoin Payment Gateway invoice",
             "data" => "Order",
-            "paymentId" => (string) $id,
+            "paymentId" => (string)$id,
             "date" => $datetime->format(DateTime::ATOM),
             "nonce" => $this->get_random_string(32)
         );
@@ -103,12 +110,14 @@ class DagpayClient {
         return $result;
     }
 
-    public function get_invoice_info( $id ) {
+    public function get_invoice_info($id)
+    {
         $result = $this->make_request('GET', 'invoices/' . $id);
         return $result;
     }
 
-    public function cancel_invoice( $id ) {
+    public function cancel_invoice($id)
+    {
         $result = $this->make_request('POST', 'invoices/cancel', array(
             "invoiceId" => $id
         ));
@@ -116,7 +125,8 @@ class DagpayClient {
         return $result;
     }
 
-    private function make_request($method, $url, $data = array()) {
+    private function make_request($method, $url, $data = array())
+    {
         if ($this->platform === 'standalone') {
             // TODO: catch errors
             if ($method == 'POST') {
@@ -126,7 +136,7 @@ class DagpayClient {
             }
         } else if ('wordpress') {
             $data = json_encode($data);
-            $request["headers"] = array( 'Content-Type' => 'application/json');
+            $request["headers"] = array('Content-Type' => 'application/json');
             $response = null;
 
             if ($method == 'POST') {
@@ -136,18 +146,21 @@ class DagpayClient {
                 $response = wp_safe_remote_get($this->get_url() . $url, $request);
             }
 
-            if ( is_wp_error( $response ) )
+            if (is_wp_error($response)) {
                 throw new \Exception("Something failed! Please try again later...");
+            }
 
-            $data = json_decode( wp_remote_retrieve_body( $response ) );
-            if (! $data->success)
+            $data = json_decode(wp_remote_retrieve_body($response));
+            if (!$data->success) {
                 throw new \Exception("Failed"); // TODO: set correct message
+            }
 
             return $data->payload;
         }
     }
 
-    private function get_url() {
+    private function get_url()
+    {
         return $this->test ? 'https://test-api.dagpay.io/api/' : 'https://api.dagpay.io/api/';
     }
 }
