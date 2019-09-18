@@ -1,5 +1,7 @@
 <?php
 
+namespace Dagpay;
+
 /**
  * ValidationException
  * - used to generate the exception related to validation which raised when response
@@ -7,7 +9,7 @@
  *   used to throw the Validation errors at the time of creating order.
  *     used to throw the authentication failed errors.
  */
-Class ValidationException extends Exception
+Class ValidationException extends \Exception
 {
     private $errors;
     private $apiResponse;

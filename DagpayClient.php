@@ -1,6 +1,6 @@
 <?php
 
-include_once __DIR__ . DIRECTORY_SEPARATOR . 'curl.php';
+namespace Dagpay;
 
 class DagpayClient
 {
@@ -78,8 +78,8 @@ class DagpayClient
             $info->validForSeconds,
             $info->statusDelivered ? "true" : "false",
             $info->statusDeliveryAttempts,
-            !is_null($info->statusLastAttemptDate) ? $info->statusLastAttemptDate : "",
-            !is_null($info->statusDeliveredDate) ? $info->statusDeliveredDate : "",
+            $info->statusLastAttemptDate !== null ? $info->statusLastAttemptDate : "",
+            $info->statusDeliveredDate !== null ? $info->statusDeliveredDate : "",
             $info->date,
             $info->nonce
         ));
@@ -87,7 +87,7 @@ class DagpayClient
 
     public function create_invoice($id, $currency, $total)
     {
-        $datetime = new DateTime();
+        $datetime = new \DateTime();
 
         $invoice = array(
             "userId" => $this->user_id,
@@ -97,7 +97,7 @@ class DagpayClient
             "description" => "Dagcoin Payment Gateway invoice",
             "data" => "Order",
             "paymentId" => (string)$id,
-            "date" => $datetime->format(DateTime::ATOM),
+            "date" => $datetime->format(\DateTime::ATOM),
             "nonce" => $this->get_random_string(32)
         );
 
@@ -105,15 +105,12 @@ class DagpayClient
         $create_invoice_request_info = $invoice;
         $create_invoice_request_info["signature"] = $signature;
 
-        $result = $this->make_request('POST', 'invoices', $create_invoice_request_info);
-
-        return $result;
+        return $this->make_request('POST', 'invoices', $create_invoice_request_info);
     }
 
     public function get_invoice_info($id)
     {
-        $result = $this->make_request('GET', 'invoices/' . $id);
-        return $result;
+        return $this->make_request('GET', 'invoices/' . $id);
     }
 
     public function cancel_invoice($id)

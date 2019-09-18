@@ -1,11 +1,13 @@
 <?php
 
+namespace Dagpay;
+
 /**
  * CurlException
  * used to throw the description of problem while connecting to instamojo server.
  * this exception throws when cURL not able to properly execute the request.
  */
-Class CurlException extends Exception
+Class CurlException extends \Exception
 {
     private $object;
 
@@ -17,7 +19,7 @@ Class CurlException extends Exception
 
     public function __toString()
     {
-        # will return curl object from curl.php in string manner.
+        # will return curl object from Curl.php in string manner.
         return "ERROR at Processing cURL request" . PHP_EOL . (string)$this->object;
     }
 }

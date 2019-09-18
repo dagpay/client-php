@@ -1,9 +1,8 @@
 <?php
 
-include_once __DIR__ . DIRECTORY_SEPARATOR . "CurlException.php";
+namespace Dagpay;
 
-use \CurlException as CurlException;
-use \Exception as Exception;
+use Exception;
 
 class Curl
 {
@@ -19,10 +18,10 @@ class Curl
     private $requestMethod;
     private $headers;
 
-    function __construct()
+    public function __construct()
     {
         $this->ch = curl_init();
-        $this->useragent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.86 Safari/537.36";
+        $this->useragent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.86 Safari/537.36';
     }
 
     public function debug($bool)
@@ -67,7 +66,7 @@ class Curl
         $this->ch = curl_init();
 
         if (!$url) {
-            throw new Exception("The url is not provided");
+            throw new Exception('The url is not provided');
         }
         $this->url = $url;
         curl_setopt($this->ch, CURLOPT_URL, $url);
@@ -103,7 +102,7 @@ class Curl
     private function execute()
     {
         $tuData = curl_exec($this->ch);
-        $this->error = "Error Number " . curl_errno($this->ch) . " with Message " . curl_error($this->ch);
+        $this->error = 'Error Number ' . curl_errno($this->ch) . ' with Message ' . curl_error($this->ch);
         $this->responseCode = curl_getinfo($this->ch);
         $this->responseCode = $this->responseCode['http_code'];
 
@@ -115,7 +114,7 @@ class Curl
             $error_message = curl_error($this->ch);
             if ($error_no == 60) {
                 throw new CurlException("Something went wrong. cURL raised an error with number: $error_no and message: $error_message. " .
-                    "Please check http://stackoverflow.com/a/21114601/846892 for a fix." . PHP_EOL, $this);
+                    'Please check http://stackoverflow.com/a/21114601/846892 for a fix.' . PHP_EOL, $this);
             } else {
                 throw new CurlException("Something went wrong. cURL raised an error with number: $error_no and message: $error_message." . PHP_EOL, $this);
             }
@@ -124,28 +123,42 @@ class Curl
         return $tuData;
     }
 
+    /**
+     * @param $url
+     * @param array $options
+     * @return bool|string
+     * @throws CurlException
+     */
     public function get($url, $options = array())
     {
-        $this->url = "";
-        $this->requestMethod = "";
-        $this->data = "";
-        $this->headers = "";
+        $this->url = '';
+        $this->requestMethod = '';
+        $this->data = '';
+        $this->headers = '';
 
         $this->prepare($url, $options);
-        $this->requestMethod = "GET";
+        $this->requestMethod = 'GET';
+
         return $this->execute();
     }
 
+    /**
+     * @param $url
+     * @param $data
+     * @param array $options
+     * @return bool|string
+     * @throws CurlException
+     */
     public function post($url, $data, $options = array())
     {
-        $this->url = "";
-        $this->requestMethod = "";
-        $this->data = "";
-        $this->headers = "";
+        $this->url = '';
+        $this->requestMethod = '';
+        $this->data = '';
+        $this->headers = '';
 
         $data_string = json_encode($data);
         $this->data = $data_string;
-        $this->requestMethod = "POST";
+        $this->requestMethod = 'POST';
         $this->prepare($url, $options);
 
         curl_setopt($this->ch, CURLOPT_POST, 1);
@@ -162,12 +175,15 @@ class Curl
         curl_close($this->ch);
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return "Requesting  '$this->url' url using  '$this->requestMethod' method" . PHP_EOL .
-            "and Data:" . print_R($this->data, true) . PHP_EOL .
-            "Headers are : " . print_r($this->headers, true) . PHP_EOL .
-            "ErrorMessage(if any) :" . $this->error . PHP_EOL .
-            "with Response Code:" . $this->responseCode;
+            'and Data:' . print_R($this->data, true) . PHP_EOL .
+            'Headers are : ' . print_r($this->headers, true) . PHP_EOL .
+            'ErrorMessage(if any) :' . $this->error . PHP_EOL .
+            'with Response Code:' . $this->responseCode;
     }
 }
