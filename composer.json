@@ -3,7 +3,7 @@
   "type": "library",
   "keywords": ["payment","dagcoin"],
   "homepage": "https://github.com/dagpay/client-php",
-  "license": "MIT",
+  "license": "GPL-3.0",
   "description": "Dagpay PHP Client",
   "require": {
     "php": ">=5.6",
