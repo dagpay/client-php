@@ -200,7 +200,7 @@ class DagpayClient
 
             $data = json_decode(wp_remote_retrieve_body($response), false);
             if (!$data->success) {
-                throw new Exception('Failed'); // TODO: set correct message
+                throw new Exception($data->error ? $data->error : "Something went wrong! Please try again later or contact our support...");
             }
 
             return $data->payload;
