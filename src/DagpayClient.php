@@ -2,6 +2,8 @@
 
 namespace Dagpay;
 
+use Exception;
+
 class DagpayClient
 {
     private $curl;
@@ -11,9 +13,9 @@ class DagpayClient
     private $test;
     private $platform;
 
-    public function __construct($environment_id, $user_id, $secret, $mode, $platform = "standalone")
+    public function __construct($environment_id, $user_id, $secret, $mode, $platform = 'standalone')
     {
-        if ($platform === "standalone") {
+        if ($platform === 'standalone') {
             $this->curl = new Curl();
         }
 
@@ -24,6 +26,11 @@ class DagpayClient
         $this->platform = $platform;
     }
 
+    /**
+     * @param $length
+     * @return string
+     * @throws Exception
+     */
     private function get_random_string($length)
     {
         return strtoupper(
@@ -38,28 +45,29 @@ class DagpayClient
     private function get_signature($tokens)
     {
         return hash_hmac(
-            "sha512",
-            implode(":", $tokens),
-            $this->secret);
+            'sha512',
+            implode(':', $tokens),
+            $this->secret
+        );
     }
 
     private function get_create_invoice_signature($info)
     {
-        return $this->get_signature(array(
-            $info["currencyAmount"],
-            $info["currency"],
-            $info["description"],
-            $info["data"],
-            $info["userId"],
-            $info["paymentId"],
-            $info["date"],
-            $info["nonce"]
-        ));
+        return $this->get_signature([
+            $info['currencyAmount'],
+            $info['currency'],
+            $info['description'],
+            $info['data'],
+            $info['userId'],
+            $info['paymentId'],
+            $info['date'],
+            $info['nonce']
+        ]);
     }
 
     public function get_invoice_info_signature($info)
     {
-        return $this->get_signature(array(
+        return $this->get_signature([
             $info->id,
             $info->userId,
             $info->environmentId,
@@ -76,84 +84,111 @@ class DagpayClient
             $info->updatedDate,
             $info->expiryDate,
             $info->validForSeconds,
-            $info->statusDelivered ? "true" : "false",
+            $info->statusDelivered ? 'true' : 'false',
             $info->statusDeliveryAttempts,
-            $info->statusLastAttemptDate !== null ? $info->statusLastAttemptDate : "",
-            $info->statusDeliveredDate !== null ? $info->statusDeliveredDate : "",
+            $info->statusLastAttemptDate !== null ? $info->statusLastAttemptDate : '',
+            $info->statusDeliveredDate !== null ? $info->statusDeliveredDate : '',
             $info->date,
             $info->nonce
-        ));
+        ]);
     }
 
+    /**
+     * @param $id
+     * @param $currency
+     * @param $total
+     * @return array|mixed|object
+     * @throws Exception
+     */
     public function create_invoice($id, $currency, $total)
     {
         $datetime = new \DateTime();
-
-        $invoice = array(
-            "userId" => $this->user_id,
-            "environmentId" => $this->environment_id,
-            "currencyAmount" => (float)$total,
-            "currency" => $currency,
-            "description" => "Dagcoin Payment Gateway invoice",
-            "data" => "Order",
-            "paymentId" => (string)$id,
-            "date" => $datetime->format(\DateTime::ATOM),
-            "nonce" => $this->get_random_string(32)
-        );
+        $invoice = [
+            'userId' => $this->user_id,
+            'environmentId' => $this->environment_id,
+            'currencyAmount' => (float) $total,
+            'currency' => $currency,
+            'description' => 'Dagcoin Payment Gateway invoice',
+            'data' => 'Order',
+            'paymentId' => (string) $id,
+            'date' => $datetime->format(\DateTime::ATOM),
+            'nonce' => $this->get_random_string(32)
+        ];
 
         $signature = $this->get_create_invoice_signature($invoice);
         $create_invoice_request_info = $invoice;
-        $create_invoice_request_info["signature"] = $signature;
+        $create_invoice_request_info['signature'] = $signature;
 
         return $this->make_request('POST', 'invoices', $create_invoice_request_info);
     }
 
+    /**
+     * @param $id
+     * @return array|mixed|object
+     * @throws Exception
+     */
     public function get_invoice_info($id)
     {
         return $this->make_request('GET', 'invoices/' . $id);
     }
 
+    /**
+     * @param $id
+     * @return array|mixed|object
+     * @throws Exception
+     */
     public function cancel_invoice($id)
     {
-        $result = $this->make_request('POST', 'invoices/cancel', array(
-            "invoiceId" => $id
-        ));
+        $result = $this->make_request('POST', 'invoices/cancel', [
+            'invoiceId' => $id
+        ]);
 
         return $result;
     }
 
-    private function make_request($method, $url, $data = array())
+    /**
+     * @param $method
+     * @param $url
+     * @param array $data
+     * @return array|mixed|object
+     * @throws CurlException
+     * @throws Exception
+     */
+    private function make_request($method, $url, $data = [])
     {
         if ($this->platform === 'standalone') {
+            $options = ['test' => $this->test === 'yes'];
             // TODO: catch errors
-            if ($method == 'POST') {
-                return json_decode($this->curl->post($this->get_url() . $url, $data));
-            } else if ($method == 'GET') {
-                return json_decode($this->curl->get($this->get_url() . $url));
+            if ($method === 'POST') {
+                return json_decode($this->curl->post($this->get_url() . $url, $data, $options), false);
             }
-        } else if ('wordpress') {
+            if ($method === 'GET') {
+                return json_decode($this->curl->get($this->get_url() . $url, $options), false);
+            }
+        } elseif ('wordpress') {
             $data = json_encode($data);
-            $request["headers"] = array('Content-Type' => 'application/json');
+            $request['headers'] = ['Content-Type' => 'application/json'];
             $response = null;
 
-            if ($method == 'POST') {
-                $request["body"] = $data;
+            if ($method === 'POST') {
+                $request['body'] = $data;
                 $response = wp_safe_remote_post($this->get_url() . $url, $request);
-            } else if ($method == 'GET') {
+            } elseif ($method === 'GET') {
                 $response = wp_safe_remote_get($this->get_url() . $url, $request);
             }
 
             if (is_wp_error($response)) {
-                throw new \Exception("Something failed! Please try again later...");
+                throw new Exception('Something failed! Please try again later...');
             }
 
-            $data = json_decode(wp_remote_retrieve_body($response));
+            $data = json_decode(wp_remote_retrieve_body($response), false);
             if (!$data->success) {
-                throw new \Exception("Failed"); // TODO: set correct message
+                throw new Exception('Failed'); // TODO: set correct message
             }
 
             return $data->payload;
         }
+        return null;
     }
 
     private function get_url()

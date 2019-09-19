@@ -9,12 +9,12 @@ namespace Dagpay;
  *   used to throw the Validation errors at the time of creating order.
  *     used to throw the authentication failed errors.
  */
-Class ValidationException extends \Exception
+class ValidationException extends \Exception
 {
     private $errors;
     private $apiResponse;
 
-    function __construct($message, $errors, $apiResponse)
+    public function __construct($message, $errors, $apiResponse)
     {
         parent::__construct($message, 0);
         $this->errors = $errors;

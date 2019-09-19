@@ -16,7 +16,9 @@ class Curl
     private $url;
     private $data;
     private $requestMethod;
+    private $responseCode;
     private $headers;
+    private $error;
 
     public function __construct()
     {
@@ -34,6 +36,10 @@ class Curl
         $this->showRequestHeaders = $enable;
     }
 
+    /**
+     * @param $path
+     * @throws Exception
+     */
     public function setCacert($path)
     {
         if (file_exists($path)) {
@@ -59,6 +65,11 @@ class Curl
         curl_setopt($this->ch, CURLOPT_REFERER, $this->referer);
     }
 
+    /**
+     * @param $url
+     * @param $options
+     * @throws Exception
+     */
     private function prepare($url, $options)
     {
         curl_close($this->ch);
@@ -73,9 +84,10 @@ class Curl
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($this->ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($this->ch, CURLOPT_USERAGENT, $this->useragent);
-
-        curl_setopt($this->ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
+        if ($options['test']) {
+            curl_setopt($this->ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
+        }
 
         if ($this->debug) {
             curl_setopt($this->ch, CURLOPT_VERBOSE, 1);
@@ -99,6 +111,10 @@ class Curl
         }
     }
 
+    /**
+     * @return bool|string
+     * @throws CurlException
+     */
     private function execute()
     {
         $tuData = curl_exec($this->ch);
@@ -112,12 +128,12 @@ class Curl
 
         if ($error_no = curl_errno($this->ch)) {
             $error_message = curl_error($this->ch);
-            if ($error_no == 60) {
+            if ($error_no === 60) {
                 throw new CurlException("Something went wrong. cURL raised an error with number: $error_no and message: $error_message. " .
                     'Please check http://stackoverflow.com/a/21114601/846892 for a fix.' . PHP_EOL, $this);
-            } else {
-                throw new CurlException("Something went wrong. cURL raised an error with number: $error_no and message: $error_message." . PHP_EOL, $this);
             }
+
+            throw new CurlException("Something went wrong. cURL raised an error with number: $error_no and message: $error_message." . PHP_EOL, $this);
         }
 
         return $tuData;
@@ -128,8 +144,9 @@ class Curl
      * @param array $options
      * @return bool|string
      * @throws CurlException
+     * @throws Exception
      */
-    public function get($url, $options = array())
+    public function get($url, $options = [])
     {
         $this->url = '';
         $this->requestMethod = '';
@@ -148,8 +165,9 @@ class Curl
      * @param array $options
      * @return bool|string
      * @throws CurlException
+     * @throws Exception
      */
-    public function post($url, $data, $options = array())
+    public function post($url, $data, $options = [])
     {
         $this->url = '';
         $this->requestMethod = '';
@@ -163,9 +181,9 @@ class Curl
 
         curl_setopt($this->ch, CURLOPT_POST, 1);
         curl_setopt($this->ch, CURLOPT_POSTFIELDS, $data_string);
-        curl_setopt($this->ch, CURLOPT_HTTPHEADER, array(
+        curl_setopt($this->ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
-            'Content-Length: ' . strlen($data_string)));
+            'Content-Length: ' . strlen($data_string)]);
 
         return $this->execute();
     }
