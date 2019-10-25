@@ -19,8 +19,6 @@
 
 namespace Dagpay;
 
-use Exception;
-
 class DagpayClient
 {
     private $curl;
@@ -46,7 +44,7 @@ class DagpayClient
     /**
      * @param $length
      * @return string
-     * @throws Exception
+     * @throws \Exception
      */
     private function get_random_string($length)
     {
@@ -115,7 +113,7 @@ class DagpayClient
      * @param $currency
      * @param $total
      * @return array|mixed|object
-     * @throws Exception
+     * @throws \Exception
      */
     public function create_invoice($id, $currency, $total)
     {
@@ -142,7 +140,7 @@ class DagpayClient
     /**
      * @param $id
      * @return array|mixed|object
-     * @throws Exception
+     * @throws \Exception
      */
     public function get_invoice_info($id)
     {
@@ -152,7 +150,7 @@ class DagpayClient
     /**
      * @param $id
      * @return array|mixed|object
-     * @throws Exception
+     * @throws \Exception
      */
     public function cancel_invoice($id)
     {
@@ -169,7 +167,7 @@ class DagpayClient
      * @param array $data
      * @return array|mixed|object
      * @throws CurlException
-     * @throws Exception
+     * @throws \Exception
      */
     private function make_request($method, $url, $data = [])
     {
@@ -195,12 +193,12 @@ class DagpayClient
             }
 
             if (is_wp_error($response)) {
-                throw new Exception('Something failed! Please try again later...');
+                throw new \Exception('Something failed! Please try again later...');
             }
 
             $data = json_decode(wp_remote_retrieve_body($response), false);
             if (!$data->success) {
-                throw new Exception($data->error ? $data->error : "Something went wrong! Please try again later or contact our support...");
+                throw new \Exception($data->error ? $data->error : "Something went wrong! Please try again later or contact our support...");
             }
 
             return $data->payload;

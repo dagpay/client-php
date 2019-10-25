@@ -19,8 +19,6 @@
 
 namespace Dagpay;
 
-use Exception;
-
 class Curl
 {
     private $ch;
@@ -55,14 +53,14 @@ class Curl
 
     /**
      * @param $path
-     * @throws Exception
+     * @throws \Exception
      */
     public function setCacert($path)
     {
         if (file_exists($path)) {
             $this->cacert = $path;
         } else {
-            throw new Exception("File Not found with $path.");
+            throw new \Exception("File Not found with $path.");
         }
     }
 
@@ -85,7 +83,7 @@ class Curl
     /**
      * @param $url
      * @param $options
-     * @throws Exception
+     * @throws \Exception
      */
     private function prepare($url, $options)
     {
@@ -94,7 +92,7 @@ class Curl
         $this->ch = curl_init();
 
         if (!$url) {
-            throw new Exception('The url is not provided');
+            throw new \Exception('The url is not provided');
         }
         $this->url = $url;
         curl_setopt($this->ch, CURLOPT_URL, $url);
@@ -161,7 +159,7 @@ class Curl
      * @param array $options
      * @return bool|string
      * @throws CurlException
-     * @throws Exception
+     * @throws \Exception
      */
     public function get($url, $options = [])
     {
@@ -182,7 +180,7 @@ class Curl
      * @param array $options
      * @return bool|string
      * @throws CurlException
-     * @throws Exception
+     * @throws \Exception
      */
     public function post($url, $data, $options = [])
     {
